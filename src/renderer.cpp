@@ -25,6 +25,9 @@ Renderer::Renderer(string const &model_path, const char* vertexPath, const char*
     initWindow();
     ourShader = Shader(vertexPath, fragmentPath);
     ourModel = Model(model_path, false);
+    //lightShader = Shader(vertexPath, fragmentPath);
+    lightShader = Shader("../shader/light/light.vs", "../shader/light/light.fs");
+    lightModel = Model("../scenes/cube/cube.obj", false);
 
 }
 
@@ -35,7 +38,6 @@ int Renderer::initWindow(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
 
     //create the window
     window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
@@ -51,7 +53,7 @@ int Renderer::initWindow(){
     //glfwSetMouseButtonCallback(window, mouse_button_callback);
     //glfwSetScrollCallback(window, scroll_callback);
 
-    // tell GLFW to capture our mouse
+    //tell GLFW to capture our mouse
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -61,25 +63,20 @@ int Renderer::initWindow(){
     }
 
     glEnable(GL_DEPTH_TEST);
-    //glDepthFunc(GL_ALWAYS);
     glDepthMask(GL_TRUE);
-    //glDepthRange(0, 100);
 
     //set rendering window size
     glViewport(0, 0, 800, 600);
 
     //set callback for window resizing
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); 
-
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
-    
-    
+   
 
 
     return 0;
 }
+
 
 int Renderer::run(){
 
@@ -120,9 +117,28 @@ int Renderer::run(){
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
     ourShader.setMat4("model", model);
+    ourShader.setVec3("viewPos", camera.Position);
+    ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    ourShader.setVec3("lightPos", light_pos);
     ourModel.Draw(ourShader);
 
-    
+
+
+    lightShader.use();
+
+    // pass projection matrix to shader (note that in this case it could change every frame)
+    projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    lightShader.setMat4("projection", projection);
+
+    view = camera.GetViewMatrix();
+    lightShader.setMat4("view", view);
+
+    // render the loaded model
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, light_pos); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
+    lightShader.setMat4("model", model);
+    lightModel.Draw(lightShader);
 
 
     return !glfwWindowShouldClose(window);
