@@ -95,7 +95,7 @@ int Renderer::run(){
 
 
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 
     //glDepthRange(0.0f, 1000.0f);
@@ -118,8 +118,16 @@ int Renderer::run(){
     model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
     ourShader.setMat4("model", model);
     ourShader.setVec3("viewPos", camera.Position);
-    ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    ourShader.setVec3("lightPos", light_pos);
+    ourShader.setVec3("light.ambient",  0.2f, 0.2f, 0.2f);
+    ourShader.setVec3("light.diffuse",  0.8f, 0.8f, 0.8f); // darken diffuse light a bit
+    ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    ourShader.setVec3("light.position", light_pos);
+
+    
+    ourShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+    ourShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+    ourShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+    ourShader.setFloat("material.shininess", 32.0f);
     ourModel.Draw(ourShader);
 
 
