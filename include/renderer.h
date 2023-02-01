@@ -8,7 +8,17 @@
 #include <iostream>
 #include <tuple>
 
+struct Rendable{
+    Model model;
+    glm::mat4 toWorld;
+    Shader shader;
+};
 
+struct Light{
+    Model model = Model("../scenes/cube/cube.obj", false);
+    glm::mat4 toWorld;
+    Shader shader = Shader("../shader/light/light.vs", "../shader/light/light.fs");
+};
 
 class Renderer
 {
@@ -17,6 +27,8 @@ public:
     GLFWwindow* window;
     Shader ourShader;
     Model ourModel;
+    vector<Rendable> models;
+    vector<Light> lights;
     Shader lightShader;
     Model lightModel;
     glm::vec3 light_pos = glm::vec3(4.0f, 2.0f, 3.0f);

@@ -15,6 +15,8 @@
 
 #include <iostream>
 
+#include <vector>
+
 
 
 float xMouse;
@@ -28,6 +30,24 @@ Renderer::Renderer(string const &model_path, const char* vertexPath, const char*
     //lightShader = Shader(vertexPath, fragmentPath);
     lightShader = Shader("../shader/light/light.vs", "../shader/light/light.fs");
     lightModel = Model("../scenes/cube/cube.obj", false);
+
+    Rendable model1;
+    model1.model = ourModel;
+    model1.shader = ourShader;
+    model1.toWorld = glm::mat4(1.0f);
+
+    models.push_back(model1);
+
+    Rendable model2;
+    model2.model = ourModel;
+    model2.shader = ourShader;
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-4.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	
+    model2.toWorld = model;
+
+    models.push_back(model2);
+
 
 }
 
@@ -100,49 +120,49 @@ int Renderer::run(){
 
     //glDepthRange(0.0f, 1000.0f);
 
-    
-
-
-    ourShader.use();
-
-    // pass projection matrix to shader (note that in this case it could change every frame)
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    ourShader.setMat4("projection", projection);
-
-    glm::mat4 view = camera.GetViewMatrix();
-    ourShader.setMat4("view", view);
 
     // render the loaded model
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-    ourShader.setMat4("model", model);
-    ourShader.setVec3("viewPos", camera.Position);
-    ourShader.setVec3("light.ambient",  0.2f, 0.2f, 0.2f);
-    ourShader.setVec3("light.diffuse",  0.8f, 0.8f, 0.8f); // darken diffuse light a bit
-    ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-    ourShader.setVec3("light.position", light_pos);
 
-    
-    ourShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-    ourShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-    ourShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    ourShader.setFloat("material.shininess", 32.0f);
-    ourModel.Draw(ourShader);
+    for(int i=0; i < models.size(); i++){
+        Rendable currentModel = models[i];
+
+        currentModel.shader.use();
+        // pass projection matrix to shader (note that in this case it could change every frame)
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        currentModel.shader.setMat4("projection", projection);
+        glm::mat4 view = camera.GetViewMatrix();
+        currentModel.shader.setMat4("view", view);
+
+        currentModel.shader.setMat4("model", currentModel.toWorld);
+        currentModel.shader.setVec3("viewPos", camera.Position);
+        currentModel.shader.setVec3("light.ambient",  0.2f, 0.2f, 0.2f);
+        currentModel.shader.setVec3("light.diffuse",  0.8f, 0.8f, 0.8f); // darken diffuse light a bit
+        currentModel.shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+        currentModel.shader.setVec3("light.position", light_pos);
+        currentModel.shader.setFloat("light.constant", 1.0f);
+        currentModel.shader.setFloat("light.linear", 0.09f);
+        currentModel.shader.setFloat("light.quadratic", 0.032f);	    
+
+        currentModel.shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+        currentModel.shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+        currentModel.shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        currentModel.shader.setFloat("material.shininess", 32.0f);
+        currentModel.model.Draw(currentModel.shader);
+    }
 
 
 
     lightShader.use();
 
     // pass projection matrix to shader (note that in this case it could change every frame)
-    projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     lightShader.setMat4("projection", projection);
 
-    view = camera.GetViewMatrix();
+    glm::mat4 view = camera.GetViewMatrix();
     lightShader.setMat4("view", view);
 
     // render the loaded model
-    model = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, light_pos); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));	// it's a bit too big for our scene, so scale it down
     lightShader.setMat4("model", model);
