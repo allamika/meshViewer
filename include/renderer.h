@@ -14,10 +14,17 @@ struct Rendable{
     Shader shader;
 };
 
+
+enum LightType{pointLight, directionalLight};
+
 struct Light{
     Model model = Model("../scenes/cube/cube.obj", false);
-    glm::mat4 toWorld;
     Shader shader = Shader("../shader/light/light.vs", "../shader/light/light.fs");
+    LightType type;
+    union{
+        glm::mat4 toWorld;
+        glm::vec3 direction;  
+    };
 };
 
 class Renderer
