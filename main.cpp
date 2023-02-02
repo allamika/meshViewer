@@ -64,11 +64,11 @@ int main(int argc, char** argv)
 {
     
     //string model_path = "../scenes/human/human.obj";
-    string model_path = "../scenes/cube/cube.obj";
-    //string model_path = "../scenes/backpack/backpack.obj";
+    //string model_path = "../scenes/cube/cube.obj";
+    string model_path = "../scenes/backpack/backpack.obj";
 
-    //Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighting_map.fs");
-    Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighted_material.fs");
+    Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighting_map.fs");
+    //Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighted_material.fs");
     //Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/texture.fs");
     MyGui gui(&renderer);
 
