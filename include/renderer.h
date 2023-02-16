@@ -39,6 +39,11 @@ public:
     Shader lightShader;
     Model lightModel;
     glm::vec3 light_pos = glm::vec3(4.0f, 2.0f, 3.0f);
+
+    float metallic = 0.5f;
+    float roughness = 0.4f;
+    float ao = 0.2f;
+
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
     const unsigned int SCR_WIDTH = 800;

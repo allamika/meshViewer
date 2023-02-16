@@ -67,8 +67,6 @@ void main()
         result += CalcDirectionLight(directionLights[i], Normal, viewDir);
     }
     
-    
-    
     FragColor = vec4(result, 1.0f);
 }
 

@@ -59,9 +59,9 @@ void main()
         result += CalcPointLight(pointLights[i], Normal, FragPos, viewDir);
     }
 
-    for(int i=0; i<NB_DIR_LIGHTS && i<nbDirLight; i ++){
-        result += CalcDirectionLight(directionLights[i], Normal, viewDir);
-    }
+    //for(int i=0; i<NB_DIR_LIGHTS && i<nbDirLight; i ++){
+    //    result += CalcDirectionLight(directionLights[i], Normal, viewDir);
+    //}
     
     
     
@@ -91,7 +91,7 @@ vec3 CalcDirectionLight(DirLight light, vec3 norm, vec3 viewDir){
     vec3 ambient = light.ambient * material.ambient;
 
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * (diff * material.diffuse);;
+    vec3 diffuse = light.diffuse * (diff * material.diffuse);
 
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);

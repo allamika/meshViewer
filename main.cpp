@@ -39,7 +39,23 @@ public:
 
         static float f = 0.0f;
         static int counter = 0;
-        ImGui::Begin("Je suis une fenetre");                          // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Je suis une fenetre");
+        
+        ImGui::Text("Metallic :");
+        float metallic = prenderer->metallic;
+        ImGui::SliderFloat(" ", &metallic, 0.0f, 1.0f);
+        prenderer->metallic = metallic;
+
+        ImGui::Text("Roughness :");
+        float roughness = prenderer->roughness;
+        ImGui::SliderFloat("  ", &roughness, 0.0f, 1.0f);
+        prenderer->roughness = roughness;
+
+        ImGui::Text("Ao :");
+        float ao = prenderer->ao;
+        ImGui::SliderFloat("   ", &ao, 0.0f, 1.0f);
+        prenderer->ao = ao;
+
 
 
         ImGui::Text("\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -64,10 +80,13 @@ int main(int argc, char** argv)
 {
     
     //string model_path = "../scenes/human/human.obj";
-    //string model_path = "../scenes/cube/cube.obj";
-    string model_path = "../scenes/backpack/backpack.obj";
+    string model_path = "../scenes/cube/cube.obj";
+    //string model_path = "../scenes/backpack/backpack.obj";
 
-    Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighting_map.fs");
+    
+    
+    Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighted_micro_material.fs");
+    //Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighting_map.fs");
     //Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/lighted_material.fs");
     //Renderer renderer(model_path, "../shader/vertex/camera_normal_texture.vs", "../shader/fragment/texture.fs");
     MyGui gui(&renderer);

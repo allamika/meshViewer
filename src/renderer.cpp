@@ -150,6 +150,11 @@ int Renderer::run(){
         currentModel->shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
         currentModel->shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         currentModel->shader.setFloat("material.shininess", 32.0f);
+        currentModel->shader.setVec3("materialBRDF.albedo", 1.0f, 0.5f, 0.31f);
+        currentModel->shader.setFloat("materialBRDF.metallic", metallic);
+        currentModel->shader.setFloat("materialBRDF.roughness", roughness);
+        currentModel->shader.setFloat("materialBRDF.ao", ao);
+
         
         currentModel->shader.setVec3("viewPos", camera.Position);
         
