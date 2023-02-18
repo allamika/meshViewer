@@ -59,9 +59,9 @@ void main()
         result += CalcPointLight(pointLights[i], Normal, FragPos, viewDir);
     }
 
-    //for(int i=0; i<NB_DIR_LIGHTS && i<nbDirLight; i ++){
-    //    result += CalcDirectionLight(directionLights[i], Normal, viewDir);
-    //}
+    for(int i=0; i<NB_DIR_LIGHTS && i<nbDirLight; i ++){
+        result += CalcDirectionLight(directionLights[i], Normal, viewDir);
+    }
     
     
     

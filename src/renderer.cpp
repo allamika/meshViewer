@@ -77,7 +77,7 @@ int Renderer::initWindow(){
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //create the window
-    window = glfwCreateWindow(800, 600, "MeshViewer", NULL, NULL);
+    window = glfwCreateWindow(1200, 800, "MeshViewer", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -103,7 +103,7 @@ int Renderer::initWindow(){
     glDepthMask(GL_TRUE);
 
     //set rendering window size
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, 1200, 800);
 
     //set callback for window resizing
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); 
@@ -192,8 +192,7 @@ int Renderer::run(){
                 default:{
                 }break;
             }
-        }
-        
+        }        
 
         currentModel->shader.setInt("nbPointLight", nbPointLight);
         currentModel->shader.setInt("nbDirLight", nbDirLight);

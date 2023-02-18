@@ -137,7 +137,7 @@ void Shader::deleteShaderProgram() const{
 
 //Check compilation or link error for shaders and program shader
 void Shader::checkCompileErrors(unsigned int shader, std::string type){
-    int success;
+    int success = 1;
     char infoLog[1024];
     if (type != "PROGRAM")
     {

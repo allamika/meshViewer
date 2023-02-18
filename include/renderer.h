@@ -40,8 +40,8 @@ public:
     Model lightModel;
     glm::vec3 light_pos = glm::vec3(4.0f, 2.0f, 3.0f);
 
-    float metallic = 0.5f;
-    float roughness = 0.4f;
+    float metallic = 0.9f;
+    float roughness = 0.2f;
     float ao = 0.2f;
 
     float deltaTime = 0.0f;
