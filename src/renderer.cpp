@@ -31,6 +31,13 @@ Renderer::Renderer(string const &model_path, const char* vertexPath, const char*
     lightShader = Shader("../shader/light/light.vs", "../shader/light/light.fs");
     lightModel = Model("../scenes/cube/cube.obj", false);
 
+    depthShader = Shader("../shader/vertex/depth.vs", "../shader/fragment/depth.fs");
+
+    createScene();
+
+}
+
+void Renderer::createScene(){
     Rendable model1;
     model1.model = ourModel;
     model1.shader = ourShader;
@@ -44,6 +51,16 @@ Renderer::Renderer(string const &model_path, const char* vertexPath, const char*
     model = glm::translate(model, glm::vec3(-4.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
     model2.toWorld = model;
     models.push_back(model2);
+
+    Rendable bigCube;
+    bigCube.model = Model("../scenes/cube/cube.obj", false);
+    bigCube.shader = ourShader;
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));	
+    bigCube.toWorld = model;
+    models.push_back(bigCube);
+
 
     Light lightp1;
     lightp1.type = pointLight;
@@ -64,20 +81,17 @@ Renderer::Renderer(string const &model_path, const char* vertexPath, const char*
     Light light2;
     light2.type = directionalLight;
     light2.direction = glm::vec3(-1.0f, -1.0f, 0.0f);
-    lights.push_back(light2);
-
+    lights.push_back(light2);   
 }
 
 int Renderer::initWindow(){
-    // glfw: initialize and configure
-    // ------------------------------
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //create the window
-    window = glfwCreateWindow(1200, 800, "MeshViewer", NULL, NULL);
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "MeshViewer", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -103,12 +117,35 @@ int Renderer::initWindow(){
     glDepthMask(GL_TRUE);
 
     //set rendering window size
-    glViewport(0, 0, 1200, 800);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
     //set callback for window resizing
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   
+
+
+    //depth map
+    const unsigned int SHADOW_WIDTH = 1200, SHADOW_HEIGHT = 800;
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    // create depth texture
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
     return 0;
@@ -116,6 +153,8 @@ int Renderer::initWindow(){
 
 
 int Renderer::run(){
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // per-frame time logic
     // --------------------
@@ -125,20 +164,56 @@ int Renderer::run(){
     //process inputs
     processInput();
 
-
-
     glfwSwapBuffers(window);
-    glfwPollEvents();
+    glfwPollEvents();glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 
+    
+    // render scene from light's point of view
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D,depthMap); 
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    renderdepthModels();
 
+
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderModels();
+
+
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, depthMap);
+
+    renderModels();
+    renderLights();
+
+    return !glfwWindowShouldClose(window);
+}
+
+
+void Renderer::renderdepthModels(){
+    for(int i=0; i < models.size(); i++){
+        std::cout << "shadow" << std::endl;
+        Rendable* currentModel = &models[i];
+        depthShader.setMat4("model", currentModel->toWorld);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        depthShader.setMat4("lightSpaceMatrix", projection * view);
+        currentModel->model.Draw(depthShader);
+    }
+}
+void Renderer::renderModels(){
     // render the loaded model
     for(int i=0; i < models.size(); i++){
         Rendable* currentModel = &models[i];
 
-        currentModel->shader.use();
         // pass projection matrix to shader (note that in this case it could change every frame)
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         currentModel->shader.setMat4("projection", projection);
@@ -148,7 +223,7 @@ int Renderer::run(){
         
         currentModel->shader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
         currentModel->shader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-        currentModel->shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        currentModel->shader.setVec3("material.specular", 0.7f, 0.7f, 0.7f);
         currentModel->shader.setFloat("material.shininess", 32.0f);
         currentModel->shader.setVec3("materialBRDF.albedo", 1.0f, 0.5f, 0.31f);
         currentModel->shader.setFloat("materialBRDF.metallic", metallic);
@@ -199,8 +274,9 @@ int Renderer::run(){
 
         currentModel->model.Draw(currentModel->shader);
     }
+}
 
-
+void Renderer::renderLights(){
     for(int i=0; i < lights.size(); i++){
         Light* currentLight = &lights[i];
 
@@ -213,7 +289,7 @@ int Renderer::run(){
                 glm::mat4 view = camera.GetViewMatrix();
                 currentLight->shader.setMat4("view", view);
                 currentLight->shader.setMat4("model", currentLight->toWorld);
-                currentLight->model.Draw(lightShader);
+                currentLight->model.Draw(currentLight->shader);
 
             }break;
 
@@ -229,18 +305,13 @@ int Renderer::run(){
                 model = glm::translate(model, camera.Position - glm::normalize(currentLight->direction) * 100.0f); 
                 currentLight->shader.setMat4("model", model);
                 
-                currentLight->model.Draw(lightShader);
+                currentLight->model.Draw(currentLight->shader);
             }break;
 
             default:{
             }break;
-
         }
-
-        
     }
-
-    return !glfwWindowShouldClose(window);
 }
 
 
@@ -303,16 +374,17 @@ void Renderer::mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
     yMouse = static_cast<float>(yposIn);
 }
 
+
 float euclidian_dist(glm::vec3 v1, glm::vec3 v2){
     return sqrt((v1.x-v2.x)*(v1.x-v2.x) + (v1.y-v2.y)*(v1.y-v2.y) + (v1.z-v2.z)*(v1.z-v2.z));
 }
+
 
 void Renderer::verticeSelection(){
     glm::vec3 select = Win_to_Obj_Coord(xMouse, yMouse);
 
     float currend_dist, min_dist = -1;
     int mesh_min, vertice_min;
-
 
     for(int i=0; i<ourModel.meshes.size(); i++){
         for(int j=0; j<ourModel.meshes[i].vertices.size(); j++){

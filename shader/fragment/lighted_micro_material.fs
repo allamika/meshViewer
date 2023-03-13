@@ -73,9 +73,9 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 
-    //for(int i=0; i<NB_POINT_LIGHTS && i<nbPointLight; i ++){
-    //    Lo += CalcPointLight(pointLights[i], Normal, FragPos, viewDir);
-    //}
+    for(int i=0; i<NB_POINT_LIGHTS && i<nbPointLight; i ++){
+        Lo += CalcPointLight(pointLights[i], Normal, FragPos, viewDir);
+    }
 
 
     for(int i=0; i<NB_DIR_LIGHTS && i<nbDirLight; i ++){
@@ -96,7 +96,11 @@ vec3 CalcPointLight(PointLight light, vec3 N, vec3 fragPos, vec3 V){
     vec3 L = normalize(light.position - FragPos);
     vec3 H = normalize(L + V);
 
-    float distance = length(light.position - FragPos);
+    if (dot(V,N) < 0.0){
+        N = -N;
+    }
+
+    float distance = 5*length(light.position - FragPos);
     float attenuation = 1/(distance * distance);
     vec3 radiance = light.specular;
        
